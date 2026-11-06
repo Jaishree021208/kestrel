@@ -1,0 +1,14 @@
+{
+  "name": "kestrel-dast",
+  "version": "2.0.0",
+  "description": "Kestrel — agentic real-time DAST. Real backend agents, thin frontend dashboard.",
+  "main": "server.js",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js",
+    "target-only": "node demo-target/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
