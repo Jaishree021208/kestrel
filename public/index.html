@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kestrel · Agentic real-time DAST</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FBF8F1;--paper:#fff;--beige:#EDE4D3;--beige2:#DCCFB6;--blue:#D3E3F0;--blue2:#A5C3DC;--accent:#3E6A8A;--ink:#27343F;--mute:#6C7782;--ok:#5E8F7A;--bad:#A9514A;--cr:#F0D6D1;--hi:#F4E3C6;--me:#DCE8F3}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 'DM Sans',system-ui,sans-serif}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--beige);display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:12px 20px}
+.logo{display:flex;align-items:center;gap:10px;font-family:Fraunces,serif;font-size:22px;font-weight:600}
+nav{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+nav a{padding:7px 14px;border-radius:99px;color:var(--mute);text-decoration:none;font-weight:500;cursor:pointer}
+nav a.on{background:var(--blue);color:var(--ink)}
+.pill{padding:5px 12px;border-radius:99px;background:var(--beige);font-size:13px}
+.pill.run{background:var(--blue)}.pill.stop{background:var(--cr)}
+main{max-width:1120px;margin:0 auto;padding:24px 20px 60px}
+section{display:none}section.on{display:block}
+.card{background:var(--paper);border:1px solid var(--beige);border-radius:14px;padding:20px}
+.grid{display:grid;gap:16px}.g2{grid-template-columns:1.15fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:860px){.g2,.g3{grid-template-columns:1fr}}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 18px;font-weight:600}
+.btn.alt{background:var(--beige);color:var(--ink)}.btn:disabled{opacity:.5}
+.mute{color:var(--mute)}.small{font-size:13px}
+.steps{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:6px}
+.steps li{display:flex;gap:12px;align-items:center;padding:8px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--beige)}
+.steps li i{width:10px;height:10px;border-radius:50%;background:var(--beige2);flex:none}
+.steps li.act{background:var(--blue);border-color:var(--blue2)}.steps li.act i{background:var(--accent);animation:pulse 1s infinite}
+.steps li.done i{background:var(--ok)}
+.steps li span{margin-left:auto;font-size:13px;color:var(--mute)}
+@keyframes pulse{50%{transform:scale(1.6);opacity:.5}}
+.log{height:340px;overflow:auto;font:13px/1.6 ui-monospace,Menlo,monospace;background:var(--bg);border-radius:10px;padding:12px}
+.log div{padding:1px 0}.log .t{color:var(--mute)}
+.tbl{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--mute);padding:8px 10px;border-bottom:1px solid var(--beige2)}
+td{padding:10px;border-bottom:1px solid var(--beige);vertical-align:top}
+code{font:13px ui-monospace,Menlo,monospace;background:var(--beige);padding:1px 6px;border-radius:6px}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.active{background:#DDEBE3;color:#3F6B57}.zombie{background:var(--hi);color:#8A5F1D}.shadow{background:var(--blue);color:#2F5878}
+.Critical{background:var(--cr)}.High{background:var(--hi)}.Medium{background:var(--me)}.Low{background:var(--beige)}
+.flist{display:grid;gap:8px;align-content:start}
+.fi{text-align:left;background:var(--paper);border:1px solid var(--beige);border-radius:12px;padding:12px 14px}
+.fi.on{border-color:var(--accent);background:var(--blue)}
+pre{background:var(--bg);border-radius:10px;padding:12px;overflow:auto;font:12.5px/1.5 ui-monospace,Menlo,monospace;margin:8px 0;max-height:280px}
+.box{background:var(--hi);border-radius:10px;padding:12px;margin:12px 0}
+.empty{text-align:center;padding:48px 16px;color:var(--mute)}
+input[type=text]{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--beige2);background:var(--bg);color:var(--ink);width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+h2{font-size:24px;margin-bottom:4px}h3{font-size:18px;margin-bottom:8px}
+#intro{position:fixed;inset:0;z-index:99;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:transform .9s cubic-bezier(.7,0,.2,1)}
+#intro.out{transform:translateY(-100%)}
+#intro svg{width:min(220px,55vw)}
+.sweep{transform-origin:100px 100px;animation:spin 2.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.word{font:600 clamp(44px,11vw,76px) Fraunces,serif;display:flex}
+.word span{opacity:0;transform:translateY(12px);animation:rise .6s forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.tag2{color:var(--mute);opacity:0;animation:rise .8s 1.8s forwards;text-align:center;padding:0 16px}
+.skip{position:absolute;bottom:24px;background:none;border:0;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){.sweep{animation:none}#intro{transition:none}}
+</style>
+</head>
+<body>
+<div id="intro" role="dialog" aria-label="Kestrel is starting">
+<svg viewBox="0 0 200 200" aria-hidden="true">
+<circle cx="100" cy="100" r="92" fill="none" stroke="#DCCFB6" stroke-width="1.5"/><circle cx="100" cy="100" r="62" fill="none" stroke="#DCCFB6"/><circle cx="100" cy="100" r="32" fill="none" stroke="#DCCFB6"/>
+<path class="sweep" d="M100 100 L192 100 A92 92 0 0 0 160 35 Z" fill="#A5C3DC" opacity=".6"/>
+<circle cx="100" cy="100" r="5" fill="#3E6A8A"/>
+</svg>
+<div class="word" aria-label="Kestrel"><span style="animation-delay:.2s">K</span><span style="animation-delay:.3s">e</span><span style="animation-delay:.4s">s</span><span style="animation-delay:.5s">t</span><span style="animation-delay:.6s">r</span><span style="animation-delay:.7s">e</span><span style="animation-delay:.8s">l</span></div>
+<div class="tag2">Real agents. Real requests. Only inside the allowlist.</div>
+<button class="skip" id="skip">Skip intro</button>
+</div>
+
+<header>
+<div class="logo"><svg width="26" height="26" viewBox="0 0 200 200"><circle cx="100" cy="100" r="88" fill="none" stroke="#A5C3DC" stroke-width="14"/><circle cx="100" cy="100" r="40" fill="none" stroke="#3E6A8A" stroke-width="14"/><circle cx="100" cy="100" r="9" fill="#3E6A8A"/></svg>Kestrel</div>
+<nav>
+<a data-v="overview" class="on">Agent loop</a><a data-v="inventory">API inventory</a><a data-v="findings">Findings</a><a data-v="safety">Safety layer</a>
+</nav>
+<span class="pill" id="status">Connecting…</span>
+</header>
+
+<main>
+<section id="overview" class="on">
+<div class="card">
+<h2>Scan a real target</h2>
+<p class="mute" style="margin:4px 0 14px">This runs real HTTP requests. Start the sandbox target first (<code>npm run target</code>), then scan it here — it's already on the default allowlist.</p>
+<div class="row"><input type="text" id="target" value="http://localhost:4000" style="max-width:360px"><button class="btn" id="run">Scan target</button><button class="btn alt" id="reset">Reset</button></div>
+<p class="small mute" id="scanmsg" style="margin-top:8px"></p>
+</div>
+<div class="grid g2" style="margin-top:16px">
+<div class="card"><h3>Agent loop</h3><ol class="steps" id="steps"></ol></div>
+<div class="card"><h3>Live agent log</h3><div class="log" id="log" aria-live="polite"><div class="mute">Enter a target and press Scan.</div></div></div>
+</div>
+</section>
+
+<section id="inventory"><h2>API inventory</h2><p class="mute">From <code>GET /api/inventory</code> — real crawl results compared against the traffic log.</p><div id="invbody"></div></section>
+<section id="findings"><h2>Findings</h2><p class="mute">From <code>GET /api/findings</code> — each was verified with a second, independent request.</p><div id="fbody"></div></section>
+<section id="safety">
+<h2>Safety layer</h2>
+<div class="grid g3">
+<div class="card"><h3>Scope allowlist</h3><div id="scope" class="small"></div><div class="row" style="margin-top:10px"><input type="text" id="url" value="https://api.partner-prod.example/v3/bookings"><button class="btn alt" id="chk">Check URL</button></div><div id="chkres" class="small" style="margin-top:8px"></div></div>
+<div class="card"><h3>Rate limit</h3><p class="small mute">Backs off automatically from real measured latency during a scan.</p><div class="row"><input type="text" id="rate" value="4" style="max-width:80px"><button class="btn alt" id="setrate">Set max req/s</button></div><p class="small mute" id="rateres"></p></div>
+<div class="card"><h3>Controls</h3><button class="btn" id="kill" style="width:100%">Pause all agents</button></div>
+</div>
+<div class="card" style="margin-top:16px"><h3>Audit log</h3><div class="tbl"><table style="min-width:600px"><thead><tr><th>Time</th><th>Agent</th><th>Request</th><th>Decision</th></tr></thead><tbody id="aud"></tbody></table></div></div>
+</section>
+</main>
+
+<script>
+const $=s=>document.querySelector(s),E=s=>String(s).replace(/[&<>]/g,c=>({'&':'&lt;','<':'&lt;','>':'&gt;'}[c]));
+let STAGES=[],sel=null,filter='All',lastInv=null,lastFindings=null;
+async function api(p,o){const r=await fetch(p,o);if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||r.statusText);return r.status===204?null:r.json()}
+
+function drawSteps(active,done){$('#steps').innerHTML=STAGES.map((s,i)=>`<li class="${i<done?'done':i===active?'act':''}"><i></i><b>${s[0]}</b><span>${s[1]}</span></li>`).join('')}
+function setStatus(running,paused){const p=$('#status');p.className='pill '+(paused?'stop':running?'run':'');p.textContent=paused?'Paused by safety layer':running?'Scanning…':'Idle'}
+function log(m){const l=$('#log');if(l.children.length===1&&l.children[0].classList.contains('mute'))l.innerHTML='';const d=document.createElement('div');d.innerHTML=`<span class="t">${m.time}</span> ${E(m.message)}`;l.appendChild(d);l.scrollTop=l.scrollHeight}
+
+function drawInv(rows){lastInv=rows||lastInv;const b=$('#invbody');if(!lastInv){b.innerHTML='<div class="card empty">No scan yet.</div>';return}
+const fs=['All','active','zombie','shadow'];const shown=filter==='All'?lastInv:lastInv.filter(x=>x.status===filter);
+b.innerHTML=`<div class="card" style="margin-top:12px"><div class="row">${fs.map(f=>`<button class="btn alt" data-f="${f}" style="${filter===f?'outline:2px solid var(--accent)':''}">${f}</button>`).join('')}<span style="flex:1"></span><button class="btn alt" id="spec">Generate OpenAPI</button></div>
+<div class="tbl"><table><thead><tr><th>Endpoint</th><th>Status</th><th>Last traffic</th><th>Owner</th></tr></thead><tbody>${shown.map(x=>`<tr><td><code>${x.method}</code> ${E(x.path)}</td><td><span class="tag ${x.status}">${x.status}</span></td><td>${x.lastTraffic}</td><td>${x.owner}</td></tr>`).join('')}</tbody></table></div><div id="specout"></div></div>`;
+b.querySelectorAll('[data-f]').forEach(c=>c.onclick=()=>{filter=c.dataset.f;drawInv()});
+$('#spec').onclick=async()=>{const sp=await api('/api/inventory/openapi');const txt=JSON.stringify(sp,null,2);$('#specout').innerHTML='<pre id="sp"></pre>';$('#sp').textContent=txt}}
+
+function drawF(rows){lastFindings=rows||lastFindings;const b=$('#fbody');if(!lastFindings||!lastFindings.length){b.innerHTML='<div class="card empty">No findings yet.</div>';return}
+if(!sel)sel=lastFindings[0].id;const f=lastFindings.find(x=>x.id===sel);const ord=[...lastFindings].sort((a,b)=>b.score-a.score);
+b.innerHTML=`<div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);margin-top:12px"><div class="flist">${ord.map(x=>`<button class="fi ${x.id===sel?'on':''}" data-id="${x.id}"><span class="tag ${x.severity}">${x.severity} ${x.score.toFixed(1)}</span> <span class="small mute">${x.status}</span><div style="margin-top:4px"><b>${x.title}</b></div></button>`).join('')}</div>
+<div class="card"><h3>${f.id} · ${f.title}</h3><div class="row" style="margin:6px 0"><span class="tag ${f.severity}">${f.severity} ${f.score.toFixed(1)}</span><span class="pill">${f.status}</span></div>
+<p class="small"><b>Request:</b> <code>${E(f.request)}</code><br><b>Owner:</b> ${f.owner}<br><b>Why this score:</b> base ${f.scoreBreakdown.base} × ${f.scoreBreakdown.mult} for ${f.scoreBreakdown.label}</p>
+${f.status==='Awaiting approval'?'<div class="box small">This test moves money, so it waits for a human.<div class="row" style="margin-top:8px"><button class="btn" id="ap">Approve</button><button class="btn alt" id="rj">Reject</button></div></div>':f.status==='Skipped'?'<p class="mute">Rejected by reviewer.</p>':`<h3 style="font-size:15px">Evidence</h3><pre>${E(f.evidence)}</pre><p class="small mute">${E(f.verifyNote||'')}</p><h3 style="font-size:15px">Suggested fix</h3><p class="small">${f.fix}</p><div class="row"><a class="btn alt" href="/api/findings/${f.id}/ticket.md" target="_blank">Download ticket</a><button class="btn" id="rt" ${f.status==='Closed'?'disabled':''}>Retest</button></div>`}</div></div>`;
+b.querySelectorAll('[data-id]').forEach(x=>x.onclick=()=>{sel=x.dataset.id;drawF()});
+const act=async p=>{const u=await api(`/api/findings/${f.id}/${p}`,{method:'POST'});lastFindings=lastFindings.map(x=>x.id===u.id?u:x);drawF()};
+if($('#ap'))$('#ap').onclick=()=>act('approve');if($('#rj'))$('#rj').onclick=()=>act('reject');if($('#rt'))$('#rt').onclick=()=>act('retest')}
+
+function drawAud(rows){$('#aud').innerHTML=rows&&rows.length?rows.slice(0,40).map(x=>`<tr><td>${x.time}</td><td>${E(x.agent)}</td><td><code>${E(x.request)}</code></td><td>${E(x.decision)}</td></tr>`).join(''):'<tr><td colspan="4" class="mute">No requests yet.</td></tr>'}
+
+async function init(){
+const st=await api('/api/state');STAGES=st.stages;
+setStatus(st.running,st.paused);drawSteps(st.stageIndex,st.doneIndex);
+$('#scope').innerHTML=st.allowlist.map(h=>`<div><code>${h}</code></div>`).join('')+'<div class="mute" style="margin-top:6px">Anything else is blocked and logged. Scanning adds the target\'s host automatically.</div>';
+drawAud(await api('/api/audit'));
+if(st.inventoryReady)drawInv(await api('/api/inventory'));else drawInv(null);
+if(st.findingsReady)drawF(await api('/api/findings'));else drawF(null);
+
+const es=new EventSource('/api/stream');
+es.addEventListener('stage',e=>{const d=JSON.parse(e.data);drawSteps(d.active,d.done)});
+es.addEventListener('log',e=>log(JSON.parse(e.data)));
+es.addEventListener('audit',async()=>drawAud(await api('/api/audit')));
+es.addEventListener('inventory-ready',async()=>drawInv(await api('/api/inventory')));
+es.addEventListener('findings-ready',async()=>drawF(await api('/api/findings')));
+es.addEventListener('finding-update',e=>{const f=JSON.parse(e.data);if(lastFindings){lastFindings=lastFindings.map(x=>x.id===f.id?f:x);drawF()}});
+es.addEventListener('pause',e=>{const p=JSON.parse(e.data).paused;$('#kill').textContent=p?'Resume agents':'Pause all agents';setStatus(true,p)});
+es.addEventListener('run-complete',()=>{setStatus(false,false);$('#run').disabled=false});
+es.addEventListener('run-error',e=>{$('#scanmsg').textContent='Error: '+JSON.parse(e.data).message;$('#run').disabled=false;setStatus(false,false)});
+es.addEventListener('reset',()=>{sel=null;filter='All';lastFindings=null;lastInv=null;$('#log').innerHTML='<div class="mute">Enter a target and press Scan.</div>';drawSteps(-1,0);drawInv(null);drawF(null);drawAud([]);setStatus(false,false);$('#run').disabled=false});
+}
+
+$('#run').onclick=async()=>{
+const targetUrl=$('#target').value.trim();
+$('#scanmsg').textContent='';$('#run').disabled=true;$('#log').innerHTML='';
+try{
+const u=new URL(targetUrl);
+await api('/api/safety/allow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hostname:u.hostname})});
+setStatus(true,false);
+await api('/api/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({targetUrl})});
+}catch(e){$('#scanmsg').textContent='Error: '+e.message;$('#run').disabled=false;setStatus(false,false)}
+};
+$('#reset').onclick=()=>api('/api/reset',{method:'POST'});
+$('#chk').onclick=async()=>{try{const r=await api('/api/safety/check-url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:$('#url').value.trim()})});$('#chkres').innerHTML=r.allowed?'<b style="color:var(--ok)">In scope.</b>':'<b style="color:var(--bad)">Out of scope.</b> Blocked and logged.';drawAud(await api('/api/audit'))}catch(e){$('#chkres').textContent=e.message}};
+$('#setrate').onclick=async()=>{const r=await api('/api/safety/rate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rps:Number($('#rate').value)})});$('#rateres').textContent='Max rate is now '+r.maxRps+' req/s.'};
+$('#kill').onclick=()=>api('/api/pause',{method:'POST'});
+
+document.querySelectorAll('nav a').forEach(a=>a.onclick=()=>{document.querySelectorAll('nav a').forEach(x=>x.classList.remove('on'));a.classList.add('on');document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===a.dataset.v))});
+function endIntro(){const i=$('#intro');if(!i)return;i.classList.add('out');setTimeout(()=>i.remove(),950)}
+$('#skip').onclick=endIntro;setTimeout(endIntro,matchMedia('(prefers-reduced-motion:reduce)').matches?300:4200);
+init().catch(e=>{$('#status').textContent='Backend not reachable';console.error(e)});
+</script>
+</body>
+</html>

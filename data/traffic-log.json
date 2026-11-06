@@ -1,0 +1,6 @@
+[
+  { "method": "GET", "path": "/api/v3/bookings/:id", "lastSeenDaysAgo": 0 },
+  { "method": "POST", "path": "/api/v3/payments/refund", "lastSeenDaysAgo": 0 },
+  { "method": "GET", "path": "/api/v3/search", "lastSeenDaysAgo": 1 },
+  { "method": "GET", "path": "/api/v1/bookings/:id", "lastSeenDaysAgo": 142 }
+]
